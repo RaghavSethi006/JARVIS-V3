@@ -1,0 +1,27 @@
+app_name: "Jarvis"
+version: "2.0.0"
+
+tts:
+  rate: 200
+  volume: 1.0
+  voice_id: "" # Leave empty for default
+
+stt:
+  engine: "google" # google, vosk, whisper
+  timeout: 5
+
+llm:
+  mode: groq
+  model: llama-3.3-70b-versatile
+  max_tokens: 1024
+  temperature: 0.7
+  intent_max_tokens: 512
+  intent_temperature: 0.1
+  streaming: true
+
+skills:
+  weather:
+    default_city: "Edmonton"
+  email:
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587

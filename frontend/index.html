@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" style="background: transparent;">
+  <head>
+    <script>
+      // SAFETY STUBS — defined before app scripts load
+      // Prevents TypeError if Python calls these before real implementations register
+      (function() {
+        var _rQueue = [];
+        var _sQueue = [];
+
+        window.addJarvisResponse = function(msg) {
+          _rQueue.push(msg);
+        };
+
+        window.setCoreState = function(state) {
+          _sQueue.push(state);
+        };
+
+        window.__flushStubs = function() {
+          // Called by real app after it registers actual implementations
+          _rQueue.forEach(function(msg)   { window.addJarvisResponse(msg); });
+          _sQueue.forEach(function(state) { window.setCoreState(state);    });
+          _rQueue = [];
+          _sQueue = [];
+        };
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>J.A.R.V.I.S</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Exo+2:wght@200;300;400;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body,
+      #root {
+        background: transparent !important;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body style="background: transparent;">
+    <div id="root"></div>
+    <script type="module" src="./src/main.jsx"></script>
+  </body>
+</html>

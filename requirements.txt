@@ -1,0 +1,75 @@
+# ── UI Framework ──────────────────────────────
+pywebview>=5.0.5
+
+# ── Computer Vision ───────────────────────────
+opencv-contrib-python>=4.8.0
+Pillow>=8.3.0
+mediapipe>=0.8.7
+
+# ── Speech ────────────────────────────────────
+SpeechRecognition>=3.10.0
+pyttsx3>=2.90
+pyaudio>=0.2.13
+
+# ── Web Automation ────────────────────────────
+selenium>=4.15.0
+webdriver-manager>=3.8.0
+beautifulsoup4>=4.10.0
+requests>=2.31.0
+
+# ── Communication ─────────────────────────────
+pywhatkit>=5.4
+pyautogui>=0.9.53
+
+# ── Data / ML ─────────────────────────────────
+numpy>=1.21.0
+pandas>=2.0.0
+llama-cpp-python>=0.2.0
+
+# Google Services (for ScheduleGmeet feature)
+google-api-python-client>=2.0.0
+google-auth-httplib2>=0.1.0
+google-auth-oauthlib>=0.5.0
+
+# NLP (for command parsing legacy features)
+nltk>=3.6.0
+
+
+# ── Media ─────────────────────────────────────
+yt-dlp>=2023.1.1
+
+# ── APIs ──────────────────────────────────────
+newsapi-python>=0.2.6
+python-dotenv>=0.19.0
+
+# ── System ────────────────────────────────────
+psutil>=5.9.0
+schedule>=1.1.0
+python-dateutil>=2.8.0
+
+# ── Memory (Phase 1) ──────────────────────────
+chromadb>=0.4.0
+sentence-transformers>=2.2.0
+
+# ── Memory (Phase 2) ──────────────────────────
+rapidfuzz>=3.0.0
+spacy>=3.6.0
+
+# ── LLM API providers ─────────────────────────
+groq>=0.4.0
+# openai          (install on demand)
+# google-generativeai  (install on demand)
+# anthropic       (install on demand)
+
+# Feature additions
+pycaw>=20230407
+wmi>=1.5.1
+pyjokes>=0.6.0
+spotipy>=2.24.0
+openwakeword>=0.6.0
+sounddevice>=0.4.7
+
+# Add these 3 lines:
+kokoro-onnx>=0.3.0
+pygame>=2.5.0
+face_recognition>=1.3.0
