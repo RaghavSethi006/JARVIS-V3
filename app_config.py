@@ -1,0 +1,28 @@
+"""Central runtime configuration for Jarvis."""
+
+LLM_CONTEXT_SIZE = 8192
+LLM_TEMPERATURE = 0.05
+LLM_MAX_TOKENS = 300
+CONVERSATION_MAXLEN = 6
+JS_QUEUE_FLUSH_TIMEOUT = 10  # seconds
+TTS_ENABLED = True
+LOG_LEVEL = "INFO"
+
+# ── Phase 0 additions ────────────────────────────
+GROQ_MODEL = "llama-3.3-70b-versatile"
+LLM_STREAMING = True
+MEMORY_ENABLED = True         # Phase 1 — memory system active
+ENTITY_MEMORY_ENABLED = True  # Phase 2 enables this
+AGENTS_ENABLED = True         # Phase 4 enables this
+
+CONFIG = {
+    "LLM_CONTEXT_SIZE": LLM_CONTEXT_SIZE,
+    "LLM_TEMPERATURE": LLM_TEMPERATURE,
+    "LLM_MAX_TOKENS": LLM_MAX_TOKENS,
+    "CONVERSATION_MAXLEN": CONVERSATION_MAXLEN,
+    "JS_QUEUE_FLUSH_TIMEOUT": JS_QUEUE_FLUSH_TIMEOUT,
+    "TTS_ENABLED": TTS_ENABLED,
+    "LOG_LEVEL": LOG_LEVEL,
+    "GROQ_MODEL": GROQ_MODEL,
+    "LLM_STREAMING": LLM_STREAMING,
+}

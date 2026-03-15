@@ -1,0 +1,228 @@
+POV PERSONAL USE LICENSE
+Version 1.0 — 2026
+
+Copyright (c) 2026 Raghav
+Project: JARVIS (Just A Rather Very Intelligent System)
+
+────────────────────────────────────────────────────────────────────────────────
+
+PREAMBLE
+
+This license governs the use, reproduction, modification, and distribution of
+the software and associated documentation files collectively referred to as
+"JARVIS" (the "Software"). It is designed to protect the author's work while
+remaining open to individuals who want to learn from, build upon, or adapt it
+for personal and non-commercial purposes.
+
+The name "POV" stands for Personal Open View — reflecting the intent that this
+work is shared openly for personal benefit and education, while the author
+retains meaningful rights over how it is used commercially and how it is
+presented to the world.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 1 — DEFINITIONS
+
+"Author" means Raghav, the original creator and copyright holder of the
+Software.
+
+"You" means any individual or legal entity exercising permissions granted by
+this License.
+
+"Personal Use" means use by a natural person for their own private, non-revenue-
+generating purposes, including learning, experimentation, and building personal
+tools that are not distributed to others or used in a commercial context.
+
+"Non-Commercial Use" means use that is not primarily intended for or directed
+toward commercial advantage or monetary compensation. This includes academic
+research, student projects, open-source contributions, and personal portfolio
+work, provided no revenue is derived from the use of this Software.
+
+"Commercial Use" means any use of the Software, in whole or in part, that
+directly or indirectly generates revenue, supports a product or service that
+generates revenue, or is used within a commercial organisation for operational
+purposes — regardless of whether the end user pays for the Software itself.
+
+"Derivative Work" means any work that is based on or derived from the Software,
+including modifications, translations, adaptations, or any software that
+incorporates a substantial portion of the Software's source code or logic.
+
+"Distribution" means making the Software or a Derivative Work available to any
+third party by any means, including but not limited to publishing on a public
+repository, sharing via file transfer, packaging in an application, or deploying
+as a hosted service accessible to others.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 2 — GRANT OF PERMISSIONS
+
+Subject to the terms and conditions of this License, the Author hereby grants
+You the following rights at no charge:
+
+2.1  PERSONAL USE
+     You may use the Software for Personal Use without restriction, including
+     running it on your own devices, studying its source code, and adapting it
+     for your own private purposes.
+
+2.2  STUDY AND EDUCATION
+     You may read, analyse, and learn from the source code for educational
+     purposes. You may use the Software as part of academic coursework, student
+     projects, or self-directed learning, provided the use is Non-Commercial.
+
+2.3  MODIFICATION
+     You may modify the Software and create Derivative Works for Personal Use
+     or Non-Commercial Use, provided that all modifications clearly indicate
+     what was changed and when, and that this License is included in full with
+     any Derivative Work.
+
+2.4  NON-COMMERCIAL DISTRIBUTION
+     You may share the Software or Derivative Works with others under the
+     following conditions:
+     (a) You must include this License in full with every copy or Derivative Work.
+     (b) You must clearly and prominently credit the Author as follows:
+         "Based on JARVIS by Raghav — github.com/your-repo/jarvis-main"
+     (c) You must not remove, obscure, or alter any existing copyright notices.
+     (d) You must not imply that the Author endorses You or your Derivative Work.
+     (e) The Distribution must be Non-Commercial.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 3 — CONDITIONS AND RESTRICTIONS
+
+3.1  COMMERCIAL USE PROHIBITED WITHOUT PERMISSION
+     Commercial Use of the Software, including Commercial Use of Derivative
+     Works, is expressly prohibited without prior written permission from the
+     Author. If you wish to use JARVIS, or any portion of it, in a commercial
+     product, service, or context, you must contact the Author to obtain a
+     separate commercial licence.
+
+3.2  NO MISREPRESENTATION OF ORIGIN
+     You may not present the Software or any Derivative Work as entirely your
+     own original creation if it is substantially derived from this Software.
+     You may not remove the Author's copyright notices from source files.
+
+3.3  NO HARMFUL USE
+     You may not use the Software, in whole or in part, for any purpose that:
+     (a) is illegal under applicable law;
+     (b) is intended to surveil, harass, or harm any individual;
+     (c) violates the privacy of any person without their consent;
+     (d) constitutes a weapon system, surveillance infrastructure, or any
+         application intended to cause physical, psychological, or financial
+         harm to any person or group.
+
+3.4  NO SUBLICENSING
+     You may not sublicense the Software or grant others rights that exceed the
+     rights granted to You under this License.
+
+3.5  SAAS AND HOSTED SERVICES
+     Deploying the Software as a hosted service, API, or Software-as-a-Service
+     product accessible to third parties — even without charging those users —
+     constitutes Distribution and, if it generates revenue in any form for the
+     operator, constitutes Commercial Use. Both require compliance with Sections
+     2.4 and 3.1 respectively.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 4 — ATTRIBUTION
+
+Whenever the Software or a Derivative Work is distributed or shown publicly —
+including in portfolios, demos, academic papers, blog posts, and video content
+— the following attribution must appear in a reasonably prominent location:
+
+    JARVIS — Just A Rather Very Intelligent System
+    Original work by Raghav
+    Licensed under POV Personal Use License v1
+
+In software interfaces (GUIs, CLIs, web apps), this attribution may appear in
+an "About" section, credits screen, or documentation. It need not appear in the
+primary user interface on every interaction.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 5 — CONTRIBUTIONS
+
+If You submit contributions (code, documentation, assets, or other materials)
+to the original Software repository, You grant the Author a perpetual,
+worldwide, royalty-free, irrevocable licence to use, reproduce, modify,
+distribute, and sublicense those contributions as part of the Software under
+any licence terms the Author chooses, including future versions of this License
+or commercial licences.
+
+You represent that You have the legal right to grant the above licence for any
+contribution You submit.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 6 — INTELLECTUAL PROPERTY
+
+The name "JARVIS", the system architecture, the event-driven design patterns,
+the memory system design, the personality configuration, and the overall system
+concept as expressed in this Software are the intellectual property of the
+Author. This License does not transfer ownership of any intellectual property
+rights.
+
+Third-party components used by this Software (llama-cpp-python, Kokoro ONNX,
+ChromaDB, MediaPipe, and others listed in requirements.txt) remain the property
+of their respective owners and are subject to their own licences. This License
+governs only the original authored code of JARVIS.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 7 — DISCLAIMER OF WARRANTIES
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT.
+
+THE AUTHOR MAKES NO WARRANTY THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS,
+OPERATE WITHOUT INTERRUPTION, OR BE FREE FROM ERRORS OR SECURITY
+VULNERABILITIES.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 8 — LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY — WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE — ARISING
+FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF OR OTHER
+DEALINGS IN THE SOFTWARE. THIS INCLUDES, WITHOUT LIMITATION, ANY INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES, EVEN IF THE AUTHOR
+HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 9 — TERMINATION
+
+Your rights under this License terminate automatically and without notice if
+You fail to comply with any of its terms. Upon termination, You must cease all
+use, distribution, and possession of copies of the Software and Derivative
+Works.
+
+Sections 3, 4, 6, 7, 8, and 10 of this License survive termination.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 10 — FUTURE VERSIONS
+
+The Author may publish revised versions of this License. Each version will be
+given a distinguishing version number. You may use the Software under the terms
+of the version of the License under which You received it, or under the terms of
+any later version published by the Author. No later version may retroactively
+restrict rights You were already exercising under an earlier version.
+
+────────────────────────────────────────────────────────────────────────────────
+
+SECTION 11 — CONTACT
+
+For commercial licensing enquiries, questions about permitted uses, or to report
+violations of this License, contact the Author through the project repository.
+
+────────────────────────────────────────────────────────────────────────────────
+
+END OF POV PERSONAL USE LICENSE VERSION 1.0
+
+This license was written for the JARVIS project. If you find it useful as a
+template for your own work, you are welcome to adapt it — just don't claim
+it is a standard open-source license. It isn't. It is a custom license
+designed to balance openness with the author's right to benefit from their
+own work.

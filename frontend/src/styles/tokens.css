@@ -1,0 +1,40 @@
+:root {
+  --bg-void: #030508;
+  --bg-surface: #080c12;
+  --bg-elevated: #0d1520;
+  --bg-glass: rgba(8, 18, 32, 0.8);
+
+  --cyan-full: #00e5ff;
+  --cyan-mid: rgba(0, 229, 255, 0.55);
+  --cyan-dim: rgba(0, 229, 255, 0.18);
+  --cyan-ghost: rgba(0, 229, 255, 0.07);
+  --glow-sm: 0 0 8px rgba(0, 229, 255, 0.5);
+  --glow-md: 0 0 20px rgba(0, 229, 255, 0.35), 0 0 40px rgba(0, 229, 255, 0.15);
+  --glow-lg: 0 0 40px rgba(0, 229, 255, 0.4), 0 0 80px rgba(0, 229, 255, 0.2);
+
+  --ice-full: #e8f4ff;
+  --ice-mid: rgba(220, 240, 255, 0.75);
+  --ice-dim: rgba(200, 225, 255, 0.4);
+
+  --status-online: #00e5ff;
+  --status-listening: #ff4b6e;
+  --status-thinking: #ffffff;
+  --status-offline: #2a3340;
+
+  --border-dim: rgba(0, 229, 255, 0.1);
+  --border-mid: rgba(0, 229, 255, 0.25);
+  --border-bright: rgba(0, 229, 255, 0.6);
+  --border-active: rgba(0, 229, 255, 0.9);
+
+  --text-primary: #e8f4ff;
+  --text-secondary: rgba(180, 210, 240, 0.65);
+  --text-accent: #00e5ff;
+  --text-danger: #ff4b6e;
+
+  --font-ui: 'Exo 2', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-sharp: 3px;
+  --radius-mid: 8px;
+  --radius-pill: 999px;
+}
