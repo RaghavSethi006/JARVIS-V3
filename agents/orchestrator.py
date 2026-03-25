@@ -174,7 +174,13 @@ class _NullReasoning:
 class OrchestratorAgent:
     """Plans, delegates, and synthesises multi-step tasks across agents."""
 
-    def __init__(self, bus: Any, agent_registry: dict):
+    def __init__(
+        self,
+        bus: Any,
+        agent_registry: dict,
+        skill_loader: Any = None,
+        synthesis_agent: Any = None,
+    ):
         self.bus = bus
         self.llm = LLMClient.get() if LLMClient is not None else None
         if TaskQueue is None:
@@ -183,9 +189,15 @@ class OrchestratorAgent:
         self.task_queue = TaskQueue(agent_registry)
         self.memory = MemoryManager.get() if MemoryManager is not None else _NullMemory()
         self.reasoning = ReasoningLayer() if ReasoningLayer is not None else _NullReasoning()
+        self.skill_loader = skill_loader
+        self.synthesis_agent = synthesis_agent
 
-    async def process(self, user_input: str) -> str:
+    async def process(self, user_input: str) -> Optional[str]:
         """Main entry point. Returns the final spoken response."""
+        pending_handled, pending_response = await self._resolve_pending_synthesis(user_input)
+        if pending_handled:
+            return pending_response
+
         memory_ctx = ""
         try:
             memory_ctx = self.memory.build_context(user_input)
@@ -199,6 +211,8 @@ class OrchestratorAgent:
             logger.warning("Orchestrator: reasoning failed: %s", exc)
 
         plan = await self._plan(user_input, memory_ctx, scratchpad)
+        if plan is None:
+            return None
         if not plan:
             return "I'm not sure how to handle that yet. Please try rephrasing the request."
 
@@ -213,6 +227,26 @@ class OrchestratorAgent:
         asyncio.create_task(self._post_exchange(user_input, response))
         return response
 
+    async def _resolve_pending_synthesis(self, user_input: str) -> tuple[bool, Optional[str]]:
+        """Route yes/no follow-ups to the synthesis pipeline before normal planning."""
+        if self.synthesis_agent is None:
+            return False, None
+        try:
+            if not self.synthesis_agent.has_pending_confirmation():
+                return False, None
+        except Exception as exc:
+            logger.warning("Orchestrator: pending synthesis check failed: %s", exc)
+            return False, None
+
+        decision = self._classify_confirmation(user_input)
+        if decision == "confirm":
+            await self.bus.emit("synthesis_confirm", {})
+            return True, None
+        if decision == "reject":
+            await self.bus.emit("synthesis_reject", {})
+            return True, None
+        return False, None
+
     async def _post_exchange(self, user_input: str, response: str) -> None:
         """Update memory asynchronously without blocking the response."""
         try:
@@ -222,7 +256,12 @@ class OrchestratorAgent:
         except Exception as exc:
             logger.warning("Orchestrator: post-exchange memory update failed: %s", exc)
 
-    async def _plan(self, user_input: str, memory_ctx: str, scratchpad: str) -> list[Any]:
+    async def _plan(
+        self,
+        user_input: str,
+        memory_ctx: str,
+        scratchpad: str,
+    ) -> Optional[list[Any]]:
         if Task is None:
             return []
         if self.llm is None:
@@ -244,6 +283,19 @@ class OrchestratorAgent:
         try:
             task_dicts = self._parse_task_array(raw)
             normalized = self._normalize_plan(task_dicts)
+            if not normalized or all(getattr(task, "action", "") == "get_info" for task in normalized):
+                gap_check = await self._detect_gap(user_input)
+                if gap_check.get("is_gap"):
+                    await self.bus.emit(
+                        "capability_gap_detected",
+                        {
+                            "user_request": user_input,
+                            "gap_type": "missing_skill",
+                            "confidence": gap_check.get("confidence", 0.8),
+                            "reason": gap_check.get("reason", ""),
+                        },
+                    )
+                    return None
             if normalized:
                 return normalized
             logger.warning("Orchestrator: Planner returned no actionable tasks. Falling back.")
@@ -339,6 +391,92 @@ class OrchestratorAgent:
         if "remind me" in lower:
             return [Task(task_id="t1", action="set_reminder", params={"task": text, "time": ""}, agent="PersonalAgent")]
         return [Task(task_id="t1", action="get_info", params={"query": text}, agent="InfoAgent")]
+
+    async def _detect_gap(self, user_input: str) -> dict[str, Any]:
+        """Ask the LLM whether a request looks like a missing capability."""
+        if self.llm is None:
+            return {"is_gap": False, "confidence": 0.0}
+
+        known_capabilities: list[str] = []
+        if self.skill_loader is not None:
+            try:
+                known_capabilities = self.skill_loader.get_known_capabilities()
+            except Exception as exc:
+                logger.warning("Orchestrator: failed to read known synthesized capabilities: %s", exc)
+
+        prompt = f"""
+Does this user request ask for a capability that a desktop AI assistant
+(controlling computer, media, email, calendar, weather, browser, Spotify)
+would not normally have built in?
+
+Known synthesised capabilities: {known_capabilities}
+
+Request: "{user_input}"
+
+Return ONLY JSON: {{"is_gap": true/false, "confidence": 0.0-1.0, "reason": "brief reason"}}
+"""
+        try:
+            raw = await self.llm.complete(
+                messages=[{"role": "user", "content": prompt}],
+                system="You are a capability classifier. Return only valid JSON.",
+                max_tokens=120,
+                temperature=0.0,
+            )
+            return self._parse_json_object(raw)
+        except Exception as exc:
+            logger.warning("Orchestrator: gap detection failed: %s", exc)
+            return {"is_gap": False, "confidence": 0.0}
+
+    def _parse_json_object(self, raw: str) -> dict[str, Any]:
+        """Extract a JSON object from a classifier response."""
+        clean = raw.strip()
+        if clean.startswith("```"):
+            clean = re.sub(r"^```(?:json)?\s*", "", clean)
+            clean = re.sub(r"\s*```$", "", clean)
+        clean = clean.strip()
+        try:
+            parsed = json.loads(clean)
+            return parsed if isinstance(parsed, dict) else {"is_gap": False, "confidence": 0.0}
+        except json.JSONDecodeError:
+            start = clean.find("{")
+            end = clean.rfind("}")
+            if start == -1 or end == -1 or end <= start:
+                return {"is_gap": False, "confidence": 0.0}
+            parsed = json.loads(clean[start : end + 1])
+            return parsed if isinstance(parsed, dict) else {"is_gap": False, "confidence": 0.0}
+
+    @staticmethod
+    def _classify_confirmation(user_input: str) -> str:
+        """Classify a short follow-up as confirm, reject, or neither."""
+        text = (user_input or "").strip().lower()
+        if not text:
+            return ""
+
+        confirm_phrases = {
+            "yes",
+            "yes activate it",
+            "activate it",
+            "activate",
+            "go ahead",
+            "do it",
+            "proceed",
+            "sounds good",
+        }
+        reject_phrases = {
+            "no",
+            "no thanks",
+            "don't",
+            "do not",
+            "cancel",
+            "skip it",
+            "reject it",
+            "discard it",
+        }
+        if text in confirm_phrases or any(text.startswith(f"{phrase} ") for phrase in confirm_phrases):
+            return "confirm"
+        if text in reject_phrases or any(text.startswith(f"{phrase} ") for phrase in reject_phrases):
+            return "reject"
+        return ""
 
     async def _synthesise(self, tasks: list[Any], synthesis_task: Any) -> str:
         if not tasks:
