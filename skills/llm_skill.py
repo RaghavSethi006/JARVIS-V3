@@ -512,6 +512,7 @@ class LLMSkill(BaseSkill):
         else:
             response = await self._generate_response(query)
 
+        await self.bus.emit("add_jarvis_response", response)
         if TTS_ENABLED:
             await self.bus.emit("tts_speak", response)
         return response

@@ -2,7 +2,7 @@
 core/capability_manifest.py
 
 Structured description of all JARVIS capabilities.
-Injected into system prompt so the LLM knows what it can or cannot do
+Injected into the system prompt so the LLM knows what it can and cannot do
 and can offer helpful alternatives instead of failing silently.
 """
 
@@ -45,6 +45,7 @@ PERSONAL:
   - Biometric face login/registration
   - Hand gesture computer control
   - System shutdown/restart/sleep
+  - Remember user preferences, facts, prior episodes, and entity context
 
 YOU CANNOT:
   - Access local files directly (offer to open File Explorer instead)

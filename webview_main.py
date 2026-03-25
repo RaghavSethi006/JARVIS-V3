@@ -82,6 +82,8 @@ _js_lock: threading.Lock = threading.Lock()
 _windows_loaded: int = 0
 _total_windows: int = 2
 _pre_loop_queue: list[tuple[str, object]] = []
+_last_jarvis_response_text: str = ""
+_last_jarvis_response_at: float = 0.0
 
 def evaluate_js_call(fn_name: str, payload) -> str:
     return f"if (typeof {fn_name} === 'function') {fn_name}({json.dumps(payload)});"
@@ -282,12 +284,30 @@ def _evaluate_js_call(js: str) -> None:
             _js_queue.append(js)
 
 
+def _push_jarvis_response(text: object) -> None:
+    """Send a Jarvis response to the UI while suppressing back-to-back duplicates."""
+    global _last_jarvis_response_text, _last_jarvis_response_at
+
+    message = "" if text is None else str(text)
+    now = time.monotonic()
+    if message == _last_jarvis_response_text and (now - _last_jarvis_response_at) < 1.0:
+        logger.debug("webview_main: Suppressed duplicate Jarvis response: %s", message[:80])
+        return
+
+    _last_jarvis_response_text = message
+    _last_jarvis_response_at = now
+    _evaluate_js_call(evaluate_js_call('window.addJarvisResponse', message))
+
+
 def setup_bus_callbacks(bus):
     def on_tts_speak(event):
-        _evaluate_js_call(evaluate_js_call('window.addJarvisResponse', event.data if event.data is not None else ''))
+        _push_jarvis_response(event.data if event.data is not None else '')
 
     def on_stt_recognition(event):
         _evaluate_js_call(evaluate_js_call('window.addUserMessage', event.data if event.data is not None else ''))
+
+    def on_add_jarvis_response(event):
+        _push_jarvis_response(event.data if event.data is not None else '')
 
     def on_set_status(event):
         _evaluate_js_call(evaluate_js_call('window.setStatus', event.data if event.data is not None else ''))
@@ -332,6 +352,7 @@ def setup_bus_callbacks(bus):
 
     bus.subscribe('tts_speak', on_tts_speak)
     bus.subscribe('stt_recognition', on_stt_recognition)
+    bus.subscribe('add_jarvis_response', on_add_jarvis_response)
     bus.subscribe('set_status', on_set_status)
     bus.subscribe('set_listening', on_set_listening)
     bus.subscribe('set_core_state', on_set_core_state)
