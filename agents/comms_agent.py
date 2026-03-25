@@ -33,50 +33,65 @@ class CommsAgent(BaseAgent or object):
         action = (task or {}).get("action", "")
         params = (task or {}).get("params", {}) or {}
 
+        if action == "send_message":
+            action = "send_whatsapp"
+
         if action == "send_email":
             receiver = (params.get("receiver") or params.get("to") or "").strip()
             subject = (params.get("subject") or "").strip()
             body = (params.get("body") or params.get("message") or "").strip()
-            await self.bus.emit("send_email", {"receiver": receiver, "subject": subject, "body": body})
-            return self._ok(speech=f"Sending email to {receiver}.")
+            return await self._run_tool_event(
+                "send_email",
+                {"receiver": receiver, "subject": subject, "body": body},
+                fallback_speech=f"Sending email to {receiver}.",
+            )
 
         if action == "read_emails":
             count = int(params.get("count", 5))
-            await self.bus.emit("read_emails", {"count": count})
-            return self._ok(speech="Reading your emails.")
+            return await self._run_tool_event(
+                "read_emails",
+                {"count": count},
+                fallback_speech="Reading your emails.",
+            )
 
         if action == "send_whatsapp":
             contact = (params.get("contact") or "").strip()
             message = (params.get("message") or "").strip()
-            await self.bus.emit("send_whatsapp", {"contact": contact, "message": message})
-            return self._ok(speech=f"Sending a WhatsApp message to {contact}.")
+            return await self._run_tool_event(
+                "send_whatsapp",
+                {"contact": contact, "message": message},
+                fallback_speech=f"Sending a WhatsApp message to {contact}.",
+            )
 
         if action == "get_calendar":
             count = int(params.get("count", 5))
-            await self.bus.emit("get_calendar", {"count": count})
-            return self._ok(speech="Checking your calendar.")
+            return await self._run_tool_event(
+                "get_calendar",
+                {"count": count},
+                fallback_speech="Checking your calendar.",
+            )
 
         if action == "create_event":
-            await self.bus.emit(
+            return await self._run_tool_event(
                 "create_event",
                 {
                     "title": params.get("title", ""),
                     "start": params.get("start", ""),
                     "end": params.get("end", ""),
                 },
+                fallback_speech="Creating the calendar event.",
             )
-            return self._ok(speech="Creating the calendar event.")
 
         if action == "schedule_meeting":
-            await self.bus.emit(
+            return await self._run_tool_event(
                 "schedule_meeting",
                 {
                     "title": params.get("title", ""),
                     "start": params.get("start", ""),
                     "end": params.get("end", ""),
                 },
+                fallback_speech="Scheduling the meeting.",
             )
-            return self._ok(speech="Scheduling the meeting.")
 
         return self._err(f"CommsAgent: Unknown action {action}")
 

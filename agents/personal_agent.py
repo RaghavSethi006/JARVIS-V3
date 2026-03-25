@@ -37,26 +37,41 @@ class PersonalAgent(BaseAgent or object):
             time_text = (params.get("time_text") or params.get("time") or "").strip()
             if not time_text:
                 return self._err("PersonalAgent: Missing alarm time.")
-            await self.bus.emit("set_alarm", {"time_text": time_text})
-            return self._ok(speech=f"Setting an alarm for {time_text}.")
+            return await self._run_tool_event(
+                "set_alarm",
+                {"time_text": time_text},
+                fallback_speech=f"Setting an alarm for {time_text}.",
+            )
 
         if action == "set_reminder":
             task_text = (params.get("task") or "").strip()
             time_text = (params.get("time") or params.get("time_text") or "").strip()
-            await self.bus.emit("set_reminder", {"task": task_text, "time_text": time_text})
-            return self._ok(speech="Setting a reminder.")
+            return await self._run_tool_event(
+                "set_reminder",
+                {"task": task_text, "time_text": time_text},
+                fallback_speech="Setting a reminder.",
+            )
 
         if action == "auth_login":
-            await self.bus.emit("auth_login", {})
-            return self._ok(speech="Starting face login.")
+            return await self._run_tool_event(
+                "auth_login",
+                {},
+                fallback_speech="Starting face login.",
+            )
 
         if action == "auth_register":
-            await self.bus.emit("auth_register", {})
-            return self._ok(speech="Starting face registration.")
+            return await self._run_tool_event(
+                "auth_register",
+                {},
+                fallback_speech="Starting face registration.",
+            )
 
         if action == "toggle_gesture_control":
-            await self.bus.emit("toggle_gesture_control", {})
-            return self._ok(speech="Toggling gesture control.")
+            return await self._run_tool_event(
+                "toggle_gesture_control",
+                {},
+                fallback_speech="Toggling gesture control.",
+            )
 
         return self._err(f"PersonalAgent: Unknown action {action}")
 

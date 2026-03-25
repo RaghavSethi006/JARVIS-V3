@@ -48,8 +48,24 @@ class TaskQueue:
         Independent tasks run in parallel.
         Returns the completed task list.
         """
+        task_map = {task.task_id: task for task in tasks}
         completed: set[str] = set()
         failed: set[str] = set()
+
+        for task in tasks:
+            missing_dependencies = [dep for dep in task.depends_on if dep not in task_map]
+            if missing_dependencies:
+                task.status = "failed"
+                task.result = {
+                    "status": "error",
+                    "speech": f"Missing dependencies: {', '.join(missing_dependencies)}.",
+                }
+                failed.add(task.task_id)
+                logger.error(
+                    "TaskQueue: Task %s references missing dependencies: %s",
+                    task.task_id,
+                    missing_dependencies,
+                )
 
         while len(completed) + len(failed) < len(tasks):
             ready = [
@@ -61,8 +77,15 @@ class TaskQueue:
             ]
 
             if not ready:
-                # Deadlock or all remaining depend on failed tasks
-                logger.warning("TaskQueue: No runnable tasks remain; stopping execution.")
+                logger.warning("TaskQueue: No runnable tasks remain; marking unresolved tasks failed.")
+                for task in tasks:
+                    if task.status == "pending":
+                        task.status = "failed"
+                        task.result = {
+                            "status": "error",
+                            "speech": "Task could not run because its dependencies never completed.",
+                        }
+                        failed.add(task.task_id)
                 break
 
             results = await asyncio.gather(
@@ -77,9 +100,13 @@ class TaskQueue:
                     failed.add(task.task_id)
                     logger.error("TaskQueue: Task %s failed: %s", task.task_id, result)
                 else:
-                    task.status = "done"
                     task.result = result
-                    completed.add(task.task_id)
+                    if result.get("status") == "error":
+                        task.status = "failed"
+                        failed.add(task.task_id)
+                    else:
+                        task.status = "done"
+                        completed.add(task.task_id)
 
         # Mark unresolved tasks that depended on failures
         for task in tasks:
@@ -99,6 +126,8 @@ class TaskQueue:
             return {"status": "error", "speech": f"Agent {task.agent} not found."}
 
         try:
+            if getattr(agent, "bus", None) is not None:
+                await agent.bus.emit("set_status", f"{task.agent} · {task.action}")
             return await asyncio.wait_for(
                 agent.handle({"action": task.action, "params": task.params, "task_id": task.task_id}),
                 timeout=timeout,

@@ -42,8 +42,28 @@ class ProductivitySkill(BaseSkill):
         print(f"Alarm set for {formatted}")
 
     async def handle_set_reminder(self, event: Event):
-        # Similar logic maybe with a message
-        pass
+        data = event.data or {}
+        task_text = (data.get("task") or "").strip()
+        time_text = (data.get("time_text") or data.get("time") or "").strip()
+        if not task_text:
+            await self.bus.emit("tts_speak", "Please tell me what you'd like to be reminded about.")
+            return
+        if not time_text:
+            await self.bus.emit("tts_speak", "Please specify a reminder time like 5 PM.")
+            return
+
+        target_time = self._parse_alarm_time(time_text)
+        if target_time is None:
+            await self.bus.emit("tts_speak", "Please specify a reminder time like 5 PM.")
+            return
+
+        msg = f"Reminder: {task_text}"
+        reminder_id = save_alarm(target_time, msg)
+        self.alarms.append(
+            {"id": reminder_id, "time": target_time, "type": "reminder", "msg": msg}
+        )
+        formatted = target_time.strftime("%I:%M %p")
+        await self.bus.emit("tts_speak", f"Reminder set for {formatted}: {task_text}.")
 
     def check_loop(self):
         """Background thread - checks alarms every second."""

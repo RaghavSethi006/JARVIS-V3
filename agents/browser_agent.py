@@ -33,39 +33,60 @@ class BrowserAgent(BaseAgent or object):
         action = (task or {}).get("action", "")
         params = (task or {}).get("params", {}) or {}
 
-        if action == "open_url":
+        if action in {"open_url", "open_website"}:
             url = (params.get("url") or params.get("site") or "").strip()
             if not url:
                 return self._err("BrowserAgent: Missing URL.")
-            await self.bus.emit("browser_open", {"url": url})
-            return self._ok(speech=f"Opening {url}.")
+            return await self._run_tool_event(
+                "browser_open",
+                {"url": url},
+                fallback_speech=f"Opening {url}.",
+            )
 
         if action == "search_web":
             query = (params.get("query") or "").strip()
             if not query:
                 return self._err("BrowserAgent: Missing search query.")
-            await self.bus.emit("browser_search", {"query": query})
-            return self._ok(speech=f"Searching for {query}.")
+            return await self._run_tool_event(
+                "browser_search",
+                {"query": query},
+                fallback_speech=f"Searching for {query}.",
+            )
 
         if action == "browser_new_tab":
-            await self.bus.emit("browser_new_tab", {})
-            return self._ok(speech="Opening a new tab.")
+            return await self._run_tool_event(
+                "browser_new_tab",
+                {},
+                fallback_speech="Opening a new tab.",
+            )
 
         if action == "browser_close_tab":
-            await self.bus.emit("browser_close_tab", {})
-            return self._ok(speech="Closing the tab.")
+            return await self._run_tool_event(
+                "browser_close_tab",
+                {},
+                fallback_speech="Closing the tab.",
+            )
 
         if action == "browser_next_tab":
-            await self.bus.emit("browser_next_tab", {})
-            return self._ok(speech="Switching to the next tab.")
+            return await self._run_tool_event(
+                "browser_next_tab",
+                {},
+                fallback_speech="Switching to the next tab.",
+            )
 
         if action == "browser_prev_tab":
-            await self.bus.emit("browser_prev_tab", {})
-            return self._ok(speech="Switching to the previous tab.")
+            return await self._run_tool_event(
+                "browser_prev_tab",
+                {},
+                fallback_speech="Switching to the previous tab.",
+            )
 
         if action == "browser_close":
-            await self.bus.emit("browser_close", {})
-            return self._ok(speech="Closing the browser.")
+            return await self._run_tool_event(
+                "browser_close",
+                {},
+                fallback_speech="Closing the browser.",
+            )
 
         return self._err(f"BrowserAgent: Unknown action {action}")
 
