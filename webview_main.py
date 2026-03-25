@@ -447,10 +447,20 @@ def _register_runtime_components(engine):
                 text = (event.data or {}).get("text", "").strip()
                 if not text:
                     return
-                response = await _orchestrator.process(text)
-                await engine.bus.emit("tts_speak", response)
-                await engine.bus.emit("add_jarvis_response", response)
-                await engine.bus.emit("set_core_state", "idle")
+                try:
+                    await engine.bus.emit("set_status", "Orchestrator · Processing")
+                    response = await _orchestrator.process(text)
+                    await engine.bus.emit("tts_speak", response)
+                    await engine.bus.emit("add_jarvis_response", response)
+                except Exception as exc:
+                    logger.exception("webview_main: Orchestrator processing failed: %s", exc)
+                    await engine.bus.emit(
+                        "tts_speak",
+                        "I ran into an internal orchestration error while handling that request.",
+                    )
+                finally:
+                    await engine.bus.emit("set_status", "ONLINE")
+                    await engine.bus.emit("set_core_state", "idle")
 
             engine.bus.subscribe("process_user_input", _handle_user_input)
             logger.info("webview_main: Orchestrator agent routing enabled.")
