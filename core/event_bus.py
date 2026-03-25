@@ -3,6 +3,15 @@ from typing import Callable, Dict, List, Any
 from dataclasses import dataclass
 from core.logger import logger
 
+try:
+    from core.agent_feedback import is_tool_feedback_suppressed, record_tool_feedback
+except ImportError:
+    def is_tool_feedback_suppressed() -> bool:
+        return False
+
+    def record_tool_feedback(message: object) -> None:
+        return None
+
 @dataclass
 class Event:
     name: str
@@ -24,6 +33,9 @@ class EventBus:
 
     async def emit(self, event_name: str, data: Any = None):
         event = Event(name=event_name, data=data)
+        if event_name in {"tts_speak", "add_jarvis_response"} and is_tool_feedback_suppressed():
+            record_tool_feedback(data)
+            return
         if event_name in self.subscribers:
             for callback in self.subscribers[event_name]:
                 try:

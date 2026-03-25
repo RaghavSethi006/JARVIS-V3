@@ -31,10 +31,7 @@ KOKORO_LANG = "en-gb"
 SAMPLE_RATE = 24000  # Kokoro native sample rate
 
 if os.environ.get("TTS_CLI_MODE") == "1":
-    async with self._lock:
-        await self.bus.emit("set_core_state", "speaking")
-        await self.bus.emit("set_core_state", "idle")
-    return
+    logger.info("TTS: CLI mode enabled. Speech playback is disabled.")
 
 
 def _kokoro_available() -> bool:
