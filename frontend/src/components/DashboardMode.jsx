@@ -2,10 +2,20 @@ import { motion } from 'framer-motion'
 import AvatarPanel from './AvatarPanel'
 import ChatArea from './ChatArea'
 import CommandInput from './CommandInput'
+import EntityPanel from './EntityPanel'
 import QuickActionBar from './QuickActionBar'
 import TitleBar from './TitleBar'
 
-export default function DashboardMode({ messages, coreState, status, onSwitchToPill, onUserCommand, orbState }) {
+export default function DashboardMode({
+  messages,
+  coreState,
+  status,
+  entities,
+  onSwitchToPill,
+  onUserCommand,
+  onAskEntity,
+  orbState,
+}) {
   return (
     <motion.section
       className="dashboard-window"
@@ -36,6 +46,16 @@ export default function DashboardMode({ messages, coreState, status, onSwitchToP
           <ChatArea messages={messages} thinking={coreState === 'thinking'} />
           <QuickActionBar />
           <CommandInput onUserCommand={onUserCommand} />
+        </motion.div>
+
+        <div className="column-divider entity-divider" />
+
+        <motion.div
+          initial={{ x: 16, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.35, delay: 0.28 }}
+        >
+          <EntityPanel entities={entities} onAskEntity={onAskEntity} />
         </motion.div>
       </main>
     </motion.section>

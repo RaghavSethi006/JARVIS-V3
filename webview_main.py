@@ -99,6 +99,43 @@ _pre_loop_queue: list[tuple[str, object]] = []
 _last_jarvis_response_text: str = ""
 _last_jarvis_response_at: float = 0.0
 
+
+def _build_entity_panel_data(limit: int = 6) -> list[dict]:
+    """Return a lightweight entity snapshot for the dashboard sidebar."""
+    try:
+        from core.memory import MemoryManager
+    except ImportError:
+        return []
+
+    try:
+        memory = MemoryManager.get()
+        store = getattr(memory, "entity_store", None)
+        if store is None:
+            return []
+
+        panel_items: list[dict] = []
+        for entity in store.get_all_entities()[:limit]:
+            hydrated = store.get_entity(entity["id"]) or entity
+            facts = [
+                fact.get("fact", "")
+                for fact in hydrated.get("facts", [])
+                if not fact.get("is_superseded")
+            ][:3]
+            panel_items.append(
+                {
+                    "id": hydrated.get("id"),
+                    "name": hydrated.get("canonical_name"),
+                    "canonicalName": hydrated.get("canonical_name"),
+                    "type": hydrated.get("type", "concept"),
+                    "facts": [fact for fact in facts if fact],
+                }
+            )
+        return panel_items
+    except Exception as exc:
+        logger.debug("webview_main: Entity panel snapshot failed: %s", exc)
+        return []
+
+
 def evaluate_js_call(fn_name: str, payload) -> str:
     return f"if (typeof {fn_name} === 'function') {fn_name}({json.dumps(payload)});"
 
@@ -185,6 +222,9 @@ class JarvisAPI:
         if self._dashboard_window is not None:
             self._dashboard_window.minimize()
         return {'status': 'ok'}
+
+    def get_entity_panel(self):
+        return _build_entity_panel_data()
 
     def close(self):
         try:

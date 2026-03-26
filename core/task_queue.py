@@ -69,11 +69,11 @@ class TaskQueue:
 
         while len(completed) + len(failed) < len(tasks):
             ready = [
-                t
-                for t in tasks
-                if t.status == "pending"
-                and all(dep in completed for dep in t.depends_on)
-                and not any(dep in failed for dep in t.depends_on)
+                task
+                for task in tasks
+                if task.status == "pending"
+                and all(dep in completed for dep in task.depends_on)
+                and not any(dep in failed for dep in task.depends_on)
             ]
 
             if not ready:
@@ -89,7 +89,7 @@ class TaskQueue:
                 break
 
             results = await asyncio.gather(
-                *[self._run_task(t, timeout) for t in ready],
+                *[self._run_task(task, timeout) for task in ready],
                 return_exceptions=True,
             )
 
@@ -108,7 +108,6 @@ class TaskQueue:
                         task.status = "done"
                         completed.add(task.task_id)
 
-        # Mark unresolved tasks that depended on failures
         for task in tasks:
             if task.status == "pending" and any(dep in failed for dep in task.depends_on):
                 task.status = "failed"
@@ -120,6 +119,7 @@ class TaskQueue:
         return tasks
 
     async def _run_task(self, task: Task, timeout: float) -> dict:
+        """Run a single task with timeout protection and status reporting."""
         task.status = "running"
         agent = self.agents.get(task.agent)
         if not agent:
@@ -127,7 +127,7 @@ class TaskQueue:
 
         try:
             if getattr(agent, "bus", None) is not None:
-                await agent.bus.emit("set_status", f"{task.agent} · {task.action}")
+                await agent.bus.emit("set_status", f"{task.agent} - Processing")
             return await asyncio.wait_for(
                 agent.handle({"action": task.action, "params": task.params, "task_id": task.task_id}),
                 timeout=timeout,
