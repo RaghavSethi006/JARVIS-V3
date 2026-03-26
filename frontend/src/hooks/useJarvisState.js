@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { startTransition, useState } from 'react'
 import useChatHistory from './useChatHistory'
 
 export default function useJarvisState() {
@@ -7,6 +7,7 @@ export default function useJarvisState() {
   const [status, setStatus] = useState('ONLINE')
   const [isListening, setListening] = useState(false)
   const [mode, setMode] = useState('dashboard')
+  const [entities, setEntitiesState] = useState([])
 
   const addJarvisMessage = (text) => addMessage('jarvis', text)
 
@@ -19,6 +20,11 @@ export default function useJarvisState() {
   }
 
   const switchMode = (nextMode) => setMode(nextMode)
+  const setEntities = (nextEntities) => {
+    startTransition(() => {
+      setEntitiesState(Array.isArray(nextEntities) ? nextEntities : [])
+    })
+  }
 
   return {
     messages,
@@ -34,5 +40,7 @@ export default function useJarvisState() {
     mode,
     setMode,
     switchMode,
+    entities,
+    setEntities,
   }
 }

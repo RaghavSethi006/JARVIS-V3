@@ -14,7 +14,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from app_config import CONFIG, AGENTS_ENABLED
+from app_config import CONFIG, AGENTS_ENABLED, SYNTHESIS_ENABLED
 from core.database import init_db
 from core.engine import JarvisEngine
 from core.logger import logger
@@ -41,6 +41,18 @@ except ImportError as exc:
     BrowserAgent = None
     PersonalAgent = None
     logger.warning("webview_main: Agent imports failed: %s", exc)
+
+try:
+    from core.skill_loader import SkillLoader
+except ImportError as exc:
+    SkillLoader = None
+    logger.warning("webview_main: SkillLoader not available: %s", exc)
+
+try:
+    from agents.synthesis_agent import SynthesisAgent
+except ImportError as exc:
+    SynthesisAgent = None
+    logger.warning("webview_main: SynthesisAgent not available: %s", exc)
 
 from services.tts import TTSService
 from services.stt import STTService
@@ -75,6 +87,8 @@ _runtime_objects = []
 _wake_service = None
 _orchestrator = None
 _agent_registry = {}
+_skill_loader = None
+_synthesis_agent = None
 
 _js_ready: bool = False
 _js_queue: list[str] = []
@@ -82,6 +96,45 @@ _js_lock: threading.Lock = threading.Lock()
 _windows_loaded: int = 0
 _total_windows: int = 2
 _pre_loop_queue: list[tuple[str, object]] = []
+_last_jarvis_response_text: str = ""
+_last_jarvis_response_at: float = 0.0
+
+
+def _build_entity_panel_data(limit: int = 6) -> list[dict]:
+    """Return a lightweight entity snapshot for the dashboard sidebar."""
+    try:
+        from core.memory import MemoryManager
+    except ImportError:
+        return []
+
+    try:
+        memory = MemoryManager.get()
+        store = getattr(memory, "entity_store", None)
+        if store is None:
+            return []
+
+        panel_items: list[dict] = []
+        for entity in store.get_all_entities()[:limit]:
+            hydrated = store.get_entity(entity["id"]) or entity
+            facts = [
+                fact.get("fact", "")
+                for fact in hydrated.get("facts", [])
+                if not fact.get("is_superseded")
+            ][:3]
+            panel_items.append(
+                {
+                    "id": hydrated.get("id"),
+                    "name": hydrated.get("canonical_name"),
+                    "canonicalName": hydrated.get("canonical_name"),
+                    "type": hydrated.get("type", "concept"),
+                    "facts": [fact for fact in facts if fact],
+                }
+            )
+        return panel_items
+    except Exception as exc:
+        logger.debug("webview_main: Entity panel snapshot failed: %s", exc)
+        return []
+
 
 def evaluate_js_call(fn_name: str, payload) -> str:
     return f"if (typeof {fn_name} === 'function') {fn_name}({json.dumps(payload)});"
@@ -169,6 +222,9 @@ class JarvisAPI:
         if self._dashboard_window is not None:
             self._dashboard_window.minimize()
         return {'status': 'ok'}
+
+    def get_entity_panel(self):
+        return _build_entity_panel_data()
 
     def close(self):
         try:
@@ -282,12 +338,30 @@ def _evaluate_js_call(js: str) -> None:
             _js_queue.append(js)
 
 
+def _push_jarvis_response(text: object) -> None:
+    """Send a Jarvis response to the UI while suppressing back-to-back duplicates."""
+    global _last_jarvis_response_text, _last_jarvis_response_at
+
+    message = "" if text is None else str(text)
+    now = time.monotonic()
+    if message == _last_jarvis_response_text and (now - _last_jarvis_response_at) < 1.0:
+        logger.debug("webview_main: Suppressed duplicate Jarvis response: %s", message[:80])
+        return
+
+    _last_jarvis_response_text = message
+    _last_jarvis_response_at = now
+    _evaluate_js_call(evaluate_js_call('window.addJarvisResponse', message))
+
+
 def setup_bus_callbacks(bus):
     def on_tts_speak(event):
-        _evaluate_js_call(evaluate_js_call('window.addJarvisResponse', event.data if event.data is not None else ''))
+        _push_jarvis_response(event.data if event.data is not None else '')
 
     def on_stt_recognition(event):
         _evaluate_js_call(evaluate_js_call('window.addUserMessage', event.data if event.data is not None else ''))
+
+    def on_add_jarvis_response(event):
+        _push_jarvis_response(event.data if event.data is not None else '')
 
     def on_set_status(event):
         _evaluate_js_call(evaluate_js_call('window.setStatus', event.data if event.data is not None else ''))
@@ -332,6 +406,7 @@ def setup_bus_callbacks(bus):
 
     bus.subscribe('tts_speak', on_tts_speak)
     bus.subscribe('stt_recognition', on_stt_recognition)
+    bus.subscribe('add_jarvis_response', on_add_jarvis_response)
     bus.subscribe('set_status', on_set_status)
     bus.subscribe('set_listening', on_set_listening)
     bus.subscribe('set_core_state', on_set_core_state)
@@ -378,12 +453,29 @@ async def _push_system_stats():
 
 
 def _register_runtime_components(engine):
-    global _wake_service
+    global _wake_service, _skill_loader, _synthesis_agent
 
     _runtime_objects.append(TTSService(engine.bus))
     _runtime_objects.append(STTService(engine.bus, _loop))
     _runtime_objects.append(GestureService(engine.bus))
     _runtime_objects.append(BiometricService(engine.bus))
+
+    if SYNTHESIS_ENABLED and SkillLoader is not None:
+        try:
+            _skill_loader = SkillLoader(engine.bus)
+            _runtime_objects.extend(_skill_loader.load_all_active())
+            logger.info("webview_main: Active generated skills loaded.")
+        except Exception as exc:
+            _skill_loader = None
+            logger.warning("webview_main: Failed to load generated skills: %s", exc)
+
+    if SYNTHESIS_ENABLED and SynthesisAgent is not None and _skill_loader is not None:
+        try:
+            _synthesis_agent = SynthesisAgent(engine.bus, _skill_loader)
+            _runtime_objects.append(_synthesis_agent)
+        except Exception as exc:
+            _synthesis_agent = None
+            logger.warning("webview_main: Failed to create synthesis agent: %s", exc)
 
     _runtime_objects.append(LLMSkill(engine.bus))
     _runtime_objects.append(WeatherSkill(engine.bus))
@@ -419,17 +511,33 @@ def _register_runtime_components(engine):
             _runtime_objects.extend(_agent_registry.values())
 
             global _orchestrator
-            _orchestrator = OrchestratorAgent(engine.bus, _agent_registry)
+            _orchestrator = OrchestratorAgent(
+                engine.bus,
+                _agent_registry,
+                skill_loader=_skill_loader,
+                synthesis_agent=_synthesis_agent,
+            )
             _runtime_objects.append(_orchestrator)
 
             async def _handle_user_input(event):
                 text = (event.data or {}).get("text", "").strip()
                 if not text:
                     return
-                response = await _orchestrator.process(text)
-                await engine.bus.emit("tts_speak", response)
-                await engine.bus.emit("add_jarvis_response", response)
-                await engine.bus.emit("set_core_state", "idle")
+                try:
+                    await engine.bus.emit("set_status", "Orchestrator · Processing")
+                    response = await _orchestrator.process(text)
+                    if response:
+                        await engine.bus.emit("tts_speak", response)
+                        await engine.bus.emit("add_jarvis_response", response)
+                except Exception as exc:
+                    logger.exception("webview_main: Orchestrator processing failed: %s", exc)
+                    await engine.bus.emit(
+                        "tts_speak",
+                        "I ran into an internal orchestration error while handling that request.",
+                    )
+                finally:
+                    await engine.bus.emit("set_status", "ONLINE")
+                    await engine.bus.emit("set_core_state", "idle")
 
             engine.bus.subscribe("process_user_input", _handle_user_input)
             logger.info("webview_main: Orchestrator agent routing enabled.")
@@ -440,8 +548,9 @@ def _register_runtime_components(engine):
 
     for obj in _runtime_objects:
         register = getattr(obj, 'register', None)
-        if callable(register):
+        if callable(register) and not getattr(obj, '_jarvis_registered', False):
             register()
+            setattr(obj, '_jarvis_registered', True)
 
     if _wake_service is not None:
         _wake_service.start()

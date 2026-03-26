@@ -6,7 +6,6 @@ Produces an internal scratchpad (never spoken) that improves
 response quality on multi-step, ambiguous, or sensitive requests.
 """
 
-import re
 from core.logger import logger
 
 try:
@@ -63,6 +62,7 @@ class ReasoningLayer:
         Caller decides whether to inject it into the system prompt.
         """
         if self.llm is None:
+            logger.debug("ReasoningLayer: LLM unavailable. Skipping reasoning pass.")
             return ""
         if not self.needs_reasoning(user_input):
             return ""

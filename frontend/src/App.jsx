@@ -5,7 +5,7 @@ import useJarvisBridge from './hooks/useJarvisBridge'
 import useJarvisState from './hooks/useJarvisState'
 
 const BOOT_MESSAGE = `Good evening. J.A.R.V.I.S. online.
-All subsystems nominal. Running on Stark Industries Neural Core v2.0.
+All subsystems nominal. Running on Stark Industries Neural Core v3.0.
 How can I assist you today, sir?`
 
 function deriveOrbState(status, coreState, isListening) {
@@ -38,6 +38,8 @@ export default function App() {
     setListening,
     mode,
     setMode,
+    entities,
+    setEntities,
   } = useJarvisState()
 
   const params = new URLSearchParams(window.location.search)
@@ -58,11 +60,44 @@ export default function App() {
     addJarvisMessage(BOOT_MESSAGE)
   }, [addJarvisMessage])
 
+  useEffect(() => {
+    let cancelled = false
+
+    const syncEntities = async () => {
+      try {
+        const nextEntities = await window.pywebview?.api?.get_entity_panel?.()
+        if (!cancelled && Array.isArray(nextEntities)) {
+          setEntities(nextEntities)
+        }
+      } catch (error) {
+        console.debug('Entity panel refresh failed', error)
+      }
+    }
+
+    syncEntities()
+    const intervalId = window.setInterval(syncEntities, 10000)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(intervalId)
+    }
+  }, [setEntities])
+
   const orbState = deriveOrbState(status, coreState, isListening)
 
   const handleUserCommand = (text) => {
     addMessage('user', text)
     setCoreState('thinking')
+  }
+
+  const handleEntityAsk = (entity) => {
+    const entityName = entity?.name || entity?.canonicalName
+    if (!entityName) {
+      return
+    }
+    const prompt = `What do you know about ${entityName}?`
+    window.pywebview?.api?.send_command?.(prompt)
+    handleUserCommand(prompt)
   }
 
   if (mode === 'pill') {
@@ -75,9 +110,11 @@ export default function App() {
       coreState={coreState}
       status={status}
       isListening={isListening}
+      entities={entities}
       orbState={orbState}
       onSwitchToPill={() => window.pywebview?.api?.resize_window('pill')}
       onUserCommand={handleUserCommand}
+      onAskEntity={handleEntityAsk}
     />
   )
 }

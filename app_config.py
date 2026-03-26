@@ -8,12 +8,12 @@ JS_QUEUE_FLUSH_TIMEOUT = 10  # seconds
 TTS_ENABLED = True
 LOG_LEVEL = "INFO"
 
-# ── Phase 0 additions ────────────────────────────
 GROQ_MODEL = "llama-3.3-70b-versatile"
 LLM_STREAMING = True
-MEMORY_ENABLED = True         # Phase 1 — memory system active
-ENTITY_MEMORY_ENABLED = True  # Phase 2 enables this
-AGENTS_ENABLED = True         # Phase 4 enables this
+MEMORY_ENABLED = True
+ENTITY_MEMORY_ENABLED = True
+AGENTS_ENABLED = True
+SYNTHESIS_ENABLED = True
 
 CONFIG = {
     "LLM_CONTEXT_SIZE": LLM_CONTEXT_SIZE,
@@ -25,4 +25,8 @@ CONFIG = {
     "LOG_LEVEL": LOG_LEVEL,
     "GROQ_MODEL": GROQ_MODEL,
     "LLM_STREAMING": LLM_STREAMING,
+    "MEMORY_ENABLED": MEMORY_ENABLED,
+    "ENTITY_MEMORY_ENABLED": ENTITY_MEMORY_ENABLED,
+    "AGENTS_ENABLED": AGENTS_ENABLED,
+    "SYNTHESIS_ENABLED": SYNTHESIS_ENABLED,
 }

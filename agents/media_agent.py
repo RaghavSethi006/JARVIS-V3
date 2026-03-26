@@ -33,47 +33,80 @@ class MediaAgent(BaseAgent or object):
         action = (task or {}).get("action", "")
         params = (task or {}).get("params", {}) or {}
 
+        if action == "play_media":
+            platform = (params.get("platform") or "spotify").strip().lower()
+            query = (params.get("query") or "").strip()
+            if platform == "youtube":
+                action = "play_youtube"
+            else:
+                action = "spotify_play"
+            params = {"query": query}
+
         if action == "spotify_play":
-            await self.bus.emit("spotify_play", {"query": params.get("query", "")})
-            return self._ok(speech="Playing on Spotify.")
+            return await self._run_tool_event(
+                "spotify_play",
+                {"query": params.get("query", "")},
+                fallback_speech="Playing on Spotify.",
+            )
 
         if action == "spotify_pause":
-            await self.bus.emit("spotify_pause", {})
-            return self._ok(speech="Pausing Spotify.")
+            return await self._run_tool_event(
+                "spotify_pause",
+                {},
+                fallback_speech="Pausing Spotify.",
+            )
 
         if action == "spotify_next":
-            await self.bus.emit("spotify_next", {})
-            return self._ok(speech="Skipping to the next track.")
+            return await self._run_tool_event(
+                "spotify_next",
+                {},
+                fallback_speech="Skipping to the next track.",
+            )
 
         if action == "spotify_prev":
-            await self.bus.emit("spotify_prev", {})
-            return self._ok(speech="Going back to the previous track.")
+            return await self._run_tool_event(
+                "spotify_prev",
+                {},
+                fallback_speech="Going back to the previous track.",
+            )
 
         if action == "spotify_volume":
             level = int(params.get("value", 50))
-            await self.bus.emit("spotify_volume", {"value": level})
-            return self._ok(speech="Adjusting Spotify volume.")
+            return await self._run_tool_event(
+                "spotify_volume",
+                {"value": level},
+                fallback_speech="Adjusting Spotify volume.",
+            )
 
         if action == "play_youtube":
             query = (params.get("query") or "").strip()
             if not query:
                 return self._err("MediaAgent: Missing YouTube query.")
-            await self.bus.emit("play_youtube", {"query": query})
-            return self._ok(speech=f"Playing {query} on YouTube.")
+            return await self._run_tool_event(
+                "play_youtube",
+                {"query": query},
+                fallback_speech=f"Playing {query} on YouTube.",
+            )
 
         if action == "search_youtube":
             query = (params.get("query") or "").strip()
             if not query:
                 return self._err("MediaAgent: Missing YouTube search query.")
-            await self.bus.emit("search_youtube", {"query": query})
-            return self._ok(speech=f"Searching YouTube for {query}.")
+            return await self._run_tool_event(
+                "search_youtube",
+                {"query": query},
+                fallback_speech=f"Searching YouTube for {query}.",
+            )
 
         if action == "download_video":
             url = (params.get("url") or "").strip()
             if not url:
                 return self._err("MediaAgent: Missing download URL.")
-            await self.bus.emit("download_video", {"url": url})
-            return self._ok(speech="Starting the download.")
+            return await self._run_tool_event(
+                "download_video",
+                {"url": url},
+                fallback_speech="Starting the download.",
+            )
 
         return self._err(f"MediaAgent: Unknown action {action}")
 

@@ -116,6 +116,24 @@ _SCHEMA_SQL = """
         created_at TEXT DEFAULT (datetime('now')),
         resolved_at TEXT DEFAULT NULL
     );
+
+    -- Phase 4.5: Synthesised skills registry
+    CREATE TABLE IF NOT EXISTS synthesised_skills (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        skill_name TEXT NOT NULL UNIQUE,
+        class_name TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        capability_description TEXT NOT NULL,
+        trigger_gap TEXT NOT NULL,
+        bus_events TEXT NOT NULL,
+        dependencies TEXT DEFAULT '[]',
+        synthesis_date TEXT DEFAULT (datetime('now')),
+        last_loaded TEXT,
+        active INTEGER DEFAULT 1,
+        validation_passed INTEGER DEFAULT 0,
+        version INTEGER DEFAULT 1,
+        notes TEXT DEFAULT ''
+    );
 """
 
 

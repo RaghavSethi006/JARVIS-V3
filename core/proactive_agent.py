@@ -66,6 +66,9 @@ class ProactiveAgent:
         Periodically surface open entity threads that have not been
         addressed in a while.
         """
+        if self.memory is None or not hasattr(self.memory, "entity_store"):
+            return
+
         try:
             all_entities = self.memory.entity_store.get_all_entities()
             for entity in all_entities[:10]:

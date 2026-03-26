@@ -112,6 +112,8 @@ Available actions and their expected params:
 - spotify_play:     { "query": "<song or artist>" }
 - spotify_pause:    {}
 - spotify_next:     {}
+- synthesis_confirm: {}
+- synthesis_reject:  {}
 
 Rules:
 - Return ONLY the JSON array. No explanation, no markdown, no extra text.
@@ -172,6 +174,8 @@ class LLMSkill(BaseSkill):
             "spotify_play": self.handle_spotify_play,
             "spotify_pause": self.handle_spotify_pause,
             "spotify_next": self.handle_spotify_next,
+            "synthesis_confirm": self.handle_synthesis_confirm,
+            "synthesis_reject": self.handle_synthesis_reject,
         }
 
     def register(self):
@@ -512,6 +516,7 @@ class LLMSkill(BaseSkill):
         else:
             response = await self._generate_response(query)
 
+        await self.bus.emit("add_jarvis_response", response)
         if TTS_ENABLED:
             await self.bus.emit("tts_speak", response)
         return response
@@ -628,6 +633,14 @@ class LLMSkill(BaseSkill):
     async def handle_spotify_next(self, **kwargs):
         await self.bus.emit("spotify_next", {})
         return "Skipping track"
+
+    async def handle_synthesis_confirm(self, **kwargs):
+        await self.bus.emit("synthesis_confirm", {})
+        return "Activating pending generated skill"
+
+    async def handle_synthesis_reject(self, **kwargs):
+        await self.bus.emit("synthesis_reject", {})
+        return "Discarding pending generated skill"
 
     def _system_control_sync(self, command: str):
         try:
